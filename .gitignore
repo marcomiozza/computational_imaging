@@ -1,0 +1,8 @@
+# Ignore .idea and .vscode folders
+.idea/
+.vscode/
+
+# Ignore specific folders in data/raw/
+data/raw/test/
+data/raw/train/
+README_TV_only.md
