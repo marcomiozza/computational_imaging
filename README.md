@@ -1,81 +1,89 @@
-# Ricostruzione tomografica con regolarizzazione Total Variation (TV)
+# Tomographic Reconstruction with Total Variation Regularization
 
-Questo progetto si propone di simulare e risolvere problemi di ricostruzione di immagini in tomografia computerizzata (CT), utilizzando dati sintetici generati a partire da immagini reali (es. dal Mayo Clinic Dataset).  
+**DISCLAIMER**: This project currently implements **only reconstruction with Total Variation (TV) regularization**. The extension with **Plug-and-Play** methods will be integrated in a later phase.
 
-Il focus attuale è sull'implementazione e analisi della ricostruzione tramite **Filtered Backprojection (FBP)** e successivamente tramite **regolarizzazione Total Variation (TV)**.
+## Project Description
 
-## Obiettivi
+This project focuses on image reconstruction in computed tomography (CT) starting from simulated sinograms. The goal is to analyze the effectiveness of Total Variation (TV) regularization in the context of limited-angle geometries. The dataset used is based on real images (e.g., Mayo Clinic Dataset), but the entire sinogram acquisition process is simulated.
 
-- Simulare sinogrammi con geometrie reali tramite ASTRA Toolbox.
-- Eseguire una ricostruzione di base con FBP.
-- Valutare le prestazioni con metriche standard.
-- Preparare la struttura per successive estensioni con tecniche avanzate come Plug-and-Play.
+---
 
-## Struttura del progetto
+## Requirements
 
-```
-computational_imaging/
-├── main.py                    # Script principale per esecuzione e test
-├── requirements.txt           # Dipendenze Python
-├── README.md                  # Documentazione generale
-│
-├── data/
-│   ├── raw/                   # Immagini ground truth (es. dal dataset Mayo)
-│   │   ├── train/             # (Per addestramento, se necessario)
-│   │   └── test/              # Immagini per la ricostruzione
-│   ├── sinograms/             # Sinogrammi simulati
-│   └── reconstructions/       # Output delle ricostruzioni
-│
-├── src/
-│   ├── sinogram_simulation.py  # Simulazione sinogrammi con ASTRA
-│   ├── total_variation.py      # Ricostruzione (FBP, e TV in fase successiva)
-│   ├── utils.py                # Funzioni di utilità (normalizzazione, metriche, rumore)
-```
+The entire project relies on **ASTRA Toolbox**, which is compatible **only with Conda environments**. To avoid installation issues, it is highly recommended to use a dedicated Conda environment.
 
-## Requisiti
-
-Tutte le dipendenze sono elencate nel file `requirements.txt`.
-
-Si consiglia fortemente l’utilizzo di un ambiente virtuale gestito con **conda**, in particolare per la compatibilità con la libreria ASTRA Toolbox.
-
-### Esempio di installazione (usando conda)
+### Recommended Setup
 
 ```bash
-conda create -n compImaging python=3.10
-conda activate compImaging
+conda create -n tv_ct python=3.10
+conda activate tv_ct
 pip install -r requirements.txt
 ```
 
-## Esecuzione
+---
 
-1. Inserire un’immagine `.png` o `.jpg` nella cartella `data/raw/test/`, preferibilmente di dimensioni 512x512.
-2. Lanciare il file `main.py` dalla root del progetto:
+## Execution
 
-```bash
-python main.py
-```
+To run an experiment:
 
-### Il file `main.py` esegue le seguenti operazioni:
+1. Place `.png` or `.jpg` images in `data/raw/test/mini_batch/`.
+2. Run the `main.py` script:
+  ```bash
+  python main.py
+  ```
 
-- Carica una ground truth da `data/raw/test/`
-- Simula i sinogrammi corrispondenti con ASTRA:
-  - 30 angoli in [-30°, 30°], con e senza rumore
-  - 180 angoli in [-90°, 90°], con e senza rumore
-- Applica la ricostruzione FBP
-- Calcola le metriche tra immagine originale e ricostruita:
-  - Errore relativo (RE)
-  - PSNR (Peak Signal-to-Noise Ratio)
-  - SSIM (Structural Similarity Index)
-- Visualizza i risultati
+---
+
+## Execution Flow
+
+### `main.py`
+- Loads the configuration from `config_test2.json`.
+- Calls the `evaluate_batch` function from the `evaluation` module.
+- Saves metrics in `results/tv_metrics_summary.csv`.
+
+### `evaluation.py`
+- `evaluate_batch(config)`: runs multiple experiments on combinations of images, sinograms, and lambda values.
+- `evaluate_single_reconstruction(...)`: reconstructs a single image with TV and computes RE, PSNR, and SSIM.
+- `save_results_to_csv(...)`: saves results to a `.csv` file.
+
+### `sinogram_simulation.py`
+- `simulate_sinogram(...)`: generates sinograms from 2D images using ASTRA.
+- `generate_and_save_sinograms(...)`: produces clean and noisy variants of sinograms (limited and full-angle).
+
+### `total_variation.py`
+- `chambolle_pock_tv_reconstruction(...)`: implements the Chambolle-Pock algorithm for TV, using projection and backprojection defined with ASTRA.
+
+### `utils.py`
+- `compute_metrics(...)`: computes RE, PSNR, SSIM.
+- `normalize_image(...)`: normalizes images to [0,1].
+- `add_noise(...)`: adds Gaussian noise to sinograms.
+
+---
+
+## Experiment Configuration
+
+Two JSON files control the experiment:
+
+- `config_test2.json` and `experiment_config.json`: specify images, sinograms, angles, lambda, iterations, and output directories.
+- Four configurations are defined for each image:
+  - `limited_clean`: 30 angles from -30° to +30°, no noise
+  - `limited_noisy`: 30 angles, with noise (σ = 0.01)
+  - `full_clean`: 180 angles from -90° to +90°, no noise
+  - `full_noisy`: 180 angles, with noise
+
+---
 
 ## Output
 
-- I sinogrammi vengono salvati nella cartella `data/sinograms/`.
-- Le immagini ricostruite possono essere salvate nella cartella `data/reconstructions/`.
-- Le metriche vengono stampate in console.
+- Sinograms are saved in `data/sinograms/`.
+- Reconstructions are saved in `data/reconstructions/`.
+- Metrics are saved in `results/tv_metrics_summary.csv`.
 
-## Estensioni previste
+---
 
-- Integrazione di tecniche di ricostruzione con regolarizzazione Total Variation (TV).
-- Confronto sistematico tra FBP e TV su tutto il test set.
-- Aggiunta di metodi Plug-and-Play con denoiser neurali (fase successiva).
+## Future Extensions
+
+The project will be extended to include:
+- Plug-and-Play reconstruction with Residual U-Net.
+- Comparison between TV and PnP methods on full images and regions of interest.
+

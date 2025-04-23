@@ -2,8 +2,6 @@ astra-toolbox
 scikit-image
 numpy
 matplotlib
-torch
-torchvision
 numpy
 matplotlib
 scikit-image
