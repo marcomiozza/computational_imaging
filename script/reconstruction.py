@@ -59,9 +59,10 @@ save_image(y.detach().cpu(), os.path.join(output_dir, "sinogram.png"))
 save_image(x_rec.detach().cpu(), os.path.join(output_dir, "reconstruction.png"))
 
 # Calcolo metriche finali
-RE = metrics.RE(x_rec, x_true).item()
-PSNR = metrics.PSNR(x_rec, x_true).item()
-SSIM = metrics.SSIM(x_rec, x_true).item()
+RE = metrics.RE(x_rec, x_true).item()  
+PSNR = metrics.PSNR(x_rec, x_true)    
+SSIM = metrics.SSIM(x_rec, x_true)     
+
 
 
 
