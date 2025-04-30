@@ -1,0 +1,26 @@
+Metadata-Version: 2.2
+Name: inverse-problems-Python
+Version: 1.0.1
+Summary: Inverse Problems with Python.
+Home-page: https://github.com/devangelista2/IPPy
+Author: Davide Evangelista
+Author-email: davide.evangelista5@unibo.it
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.10
+Requires-Dist: numpy
+Requires-Dist: torch
+Requires-Dist: matplotlib
+Requires-Dist: torchvision
+Requires-Dist: numba
+Requires-Dist: astra-toolbox
+Requires-Dist: scikit-image
+Requires-Dist: Pillow
+Dynamic: author
+Dynamic: author-email
+Dynamic: classifier
+Dynamic: home-page
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary
