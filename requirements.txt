@@ -1,9 +1,0 @@
-astra-toolbox
-scikit-image
-numpy
-matplotlib
-numpy
-matplotlib
-scikit-image
-scipy
-astra-toolbox

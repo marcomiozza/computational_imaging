@@ -1,8 +1,0 @@
-numpy
-torch
-matplotlib
-torchvision
-numba
-astra-toolbox
-scikit-image
-Pillow
