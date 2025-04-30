@@ -143,7 +143,7 @@ class CTProjector(Operator):
 
     def _adjoint(self, y: torch.Tensor) -> torch.Tensor:
         """CT backprojection: Converts PyTorch -> NumPy, restores channel"""
-        y_np = y.cpu().numpy().flatten()
+        y_np = y.detach().cpu().numpy().flatten()
         x_np = self.proj.T @ y_np.flatten()  # ASTRA expects (sinogram_dim, proj)
         return torch.tensor(x_np.reshape((1, 1, self.nx, self.ny)), device=y.device)
 
