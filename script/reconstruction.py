@@ -4,52 +4,34 @@ import numpy as np
 import torch
 import csv
 
-# Setup path IPPy
+# Setup IPPy path
 sys.path.append("/content/COMPUTATIONAL_IMAGING")
 from IPPy import operators, solvers, utilities
-from IPPy.utilities import load_image, save_image, create_path_if_not_exists, metrics
+from IPPy.utilities import metrics, data, create_path_if_not_exists
 
-# Percorsi
-image_path = "/content/COMPUTATIONAL_IMAGING/data/test/0.png"
-output_dir = "/content/output"
-create_path_if_not_exists(output_dir)
-
-# Parametri
+# Parametri generali
+image_dir = "/content/COMPUTATIONAL_IMAGING/data/test"
+output_csv = "/content/output2/batch_results.csv"
 image_size = 256
 detector_size = 512
 geometry = "parallel"
-noise_level = 0.01  # Rumore gaussiano (1%)
 lmbda = 0.001
 maxiter = 300
 p = 1
 device = torch.device(utilities.get_device())
 
-# Imposta intervallo di angoli in gradi
-start_angle_deg = 0    # es: -30, 0, -90, ...
-end_angle_deg = 360       # es: 30, 180, 90, 360, ...
-n_angles = 360   
+# Configurazione fissa
+start_deg, end_deg = -90, 90
+n_angles = abs(end_deg - start_deg)
+noise_levels = [0.0, 0.01]
 
+# Dataset
+dataset = data.ImageDataset(data_path=image_dir, data_shape=image_size)
 
+# Conversione angoli in radianti
+angles = np.linspace(np.deg2rad(start_deg), np.deg2rad(end_deg), n_angles, endpoint=False)
 
-# Carica immagine e ridimensiona
-x_true = load_image(image_path).to(device)
-x_true = torch.nn.functional.interpolate(x_true, size=(image_size, image_size), mode="bilinear")
-
-# Salva immagine originale
-save_image(x_true.detach().cpu(), os.path.join(output_dir, "original.png"))
-
-
-
-
-# Conversione in radianti
-angles = np.linspace(
-    np.deg2rad(start_angle_deg),
-    np.deg2rad(end_angle_deg),
-    n_angles,
-    endpoint=False
-)
-
-# Creazione dell’operatore CT con angoli personalizzati
+# Operatore CT
 K = operators.CTProjector(
     img_shape=(image_size, image_size),
     angles=angles,
@@ -57,52 +39,48 @@ K = operators.CTProjector(
     geometry=geometry,
 )
 
-# Calcola sinogramma pulito
-y_clean = K(x_true).detach()
-
-# Aggiungi rumore gaussiano
-noise = utilities.gaussian_noise(y_clean, noise_level=noise_level)
-y_noisy = y_clean + noise
-
-# Salva sinogrammi
-save_image(y_clean.detach().cpu(), os.path.join(output_dir, "sinogram_clean.png"))
-save_image(y_noisy.detach().cpu(), os.path.join(output_dir, "sinogram_noisy.png"))
-
-# Ricostruzione da sinogramma rumoroso
+# Solver
 solver = solvers.ChambollePockTpVUnconstrained(K)
-x_rec, info = solver(
-    y_noisy,
-    lmbda=lmbda,
-    x_true=x_true,
-    starting_point=None,
-    maxiter=maxiter,
-    p=p,
-    verbose=False,
-)
 
-# Salva ricostruzione
-save_image(x_rec.detach().cpu(), os.path.join(output_dir, "reconstruction.png"))
+# Prepara cartella output
+create_path_if_not_exists(os.path.dirname(output_csv))
 
-# Calcolo metriche
-RE = metrics.RE(x_rec, x_true).item()
-PSNR = metrics.PSNR(x_rec, x_true)
-SSIM = metrics.SSIM(x_rec, x_true)
+# Scrivi intestazione CSV
+with open(output_csv, "w", newline="") as f:
+    writer = csv.writer(f)
+    writer.writerow(["filename", "noise_level", "lambda", "RE", "PSNR", "SSIM"])
 
-# Salvataggio metriche in CSV
-csv_path = os.path.join(output_dir, "metrics.csv")
-header = ["filename", "RE", "PSNR", "SSIM"]
-if not os.path.exists(csv_path):
-    with open(csv_path, mode="w", newline="") as file:
-        writer = csv.writer(file)
-        writer.writerow(header)
+# Loop sulle immagini e livelli di rumore
+for idx in range(len(dataset)):
+    x_true, img_name = dataset[idx]
+    x_true = x_true.to(device)
 
-with open(csv_path, mode="a", newline="") as file:
-    writer = csv.writer(file)
-    writer.writerow([os.path.basename(image_path), RE, PSNR, SSIM])
+    y_clean = K(x_true).detach()
 
-# Output
-print(f"Terminato: {os.path.basename(image_path)}")
-print(f"  RE   = {RE:.4f}")
-print(f"  PSNR = {PSNR:.2f}")
-print(f"  SSIM = {SSIM:.4f}")
-print("-" * 40)
+    for noise_level in noise_levels:
+        # Applica rumore
+        noise = utilities.gaussian_noise(y_clean, noise_level=noise_level)
+        y_noisy = y_clean + noise
+
+        # Ricostruzione
+        x_rec, _ = solver(
+            y_noisy,
+            lmbda=lmbda,
+            x_true=x_true,
+            starting_point=None,
+            maxiter=maxiter,
+            p=p,
+            verbose=False,
+        )
+
+        # Calcola metriche
+        RE = metrics.RE(x_rec, x_true).item()
+        PSNR = metrics.PSNR(x_rec, x_true)
+        SSIM = metrics.SSIM(x_rec, x_true)
+
+        # Salva su CSV
+        with open(output_csv, "a", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow([os.path.basename(img_name), noise_level, lmbda, RE, PSNR, SSIM])
+
+        print(f"[{idx+1}/{len(dataset)}] {os.path.basename(img_name)} | noise={noise_level} | RE={RE:.4f}, PSNR={PSNR:.2f}, SSIM={SSIM:.4f}")
