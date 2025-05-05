@@ -5,6 +5,7 @@ import torch
 import torch.nn.functional as F
 
 
+
 class OperatorFunction(torch.autograd.Function):
     @staticmethod
     def forward(ctx, op, x):
