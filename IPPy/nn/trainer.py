@@ -87,6 +87,11 @@ def train(
         loss_total[epoch] = epoch_loss / (t + 1)
         ssim_total[epoch] = ssim_loss / (t + 1)
 
+        print(f"Epoch {epoch+1}/{n_epochs} - Loss: {loss_total[epoch]:.4f} - SSIM: {ssim_total[epoch]:.4f}")
+
+        
+        
+
         # Save the weights of the model
         if save_each is not None and (epoch + 1) % save_each == 0:
             torch.save(

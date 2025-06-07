@@ -1,0 +1,25 @@
+*.pt
+data/ITINERARIO CONSIGLIATO.docx
+data/perp.pdf
+data/result/results.csv
+IPPy/.DS_Store
+data/training.ipynb
+IPPy/__init__.py
+IPPy/hybrid/unrolled.py
+IPPy/nn/_blocks.py
+IPPy/nn/_utilities.py
+IPPy/nn/losses.py
+IPPy/nn/models.py
+IPPy/__init__.py
+IPPy/nn/_blocks.py
+IPPy/nn/_utilities.py
+IPPy/nn/losses.py
+IPPy/nn/models.py
+IPPy/operators.py
+IPPy/solvers.py
+IPPy/utilities/__init__.py
+IPPy/utilities/_utilities.py
+IPPy/utilities/data.py
+IPPy/utilities/metrics.py
+solver.py
+IPPy/operators.py
