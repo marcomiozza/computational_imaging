@@ -10,7 +10,6 @@ from . import _utilities as nn_utils
 from . import models
 import json
 
-
 def train(
     model: nn.Module,
     training_data: Dataset,
@@ -76,10 +75,10 @@ def train(
             # Measure time
             formatted_time = _utilities.formatted_time(start_time)
 
-            # Verbose
+            # Verbose per batch (aggiorna sempre la riga)
             print(
-                f"({formatted_time}) Epoch ({epoch+1} / {n_epochs}) -> Loss = {epoch_loss / (t + 1):0.4f}, "
-                + f"SSIM = {ssim_loss / (t + 1):0.4f}.",
+                f"({formatted_time}) Epoch ({epoch+1} / {n_epochs}) -> Batch {t+1}/{len(train_loader)} "
+                + f"Loss = {epoch_loss / (t + 1):0.4f}, SSIM = {ssim_loss / (t + 1):0.4f}.",
                 end="\r",
             )
 
@@ -87,10 +86,10 @@ def train(
         loss_total[epoch] = epoch_loss / (t + 1)
         ssim_total[epoch] = ssim_loss / (t + 1)
 
-        print(f"Epoch {epoch+1}/{n_epochs} - Loss: {loss_total[epoch]:.4f} - SSIM: {ssim_total[epoch]:.4f}")
-
-        
-        
+        # Verbose finale per epoca
+        print(
+            f"\n==> Fine epoca {epoch+1}/{n_epochs} - Loss medio: {loss_total[epoch]:.4f}, SSIM medio: {ssim_total[epoch]:.4f}"
+        )
 
         # Save the weights of the model
         if save_each is not None and (epoch + 1) % save_each == 0:
@@ -98,7 +97,9 @@ def train(
                 model.state_dict(),
                 weights_path,
             )
-    print()
+            print(f"==> Checkpoint salvato per epoca {epoch+1} in '{weights_path}'")
+
+    print("Training completato.")
 
 
 def save(model: nn.Module, weights_path: str):
